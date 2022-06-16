@@ -95,7 +95,7 @@ func getStatusForInterfaceConnections(ctx *workflow.Context, projectID string, s
 
 	for _, statusPeService := range convertAllToStatus(ctx, projectID, atlasPEs) {
 		if statusPeService.InterfaceEndpointID == "" {
-			result := workflow.Terminate(workflow.ProjectPrivateEndpointIsNotReadyInAtlas, "Interface Private Endpoint awaits configuration").WithoutRetry()
+			result := workflow.OK().WithMessage("Interface Private Endpoint awaits configuration")
 			ctx.SetConditionFromResult(status.PrivateEndpointReadyType, result)
 			return result
 		}
@@ -368,7 +368,7 @@ func checkIfInterfaceIsAvailable(interfaceEndpointConn *mongodbatlas.InterfaceEn
 	if isFailed(interfaceEndpointConn.Status) {
 		return false, interfaceEndpointConn.ErrorMessage
 	}
-	if !isAvailable(interfaceEndpointConn.Status) {
+	if !isAvailable(interfaceEndpointConn.Status) && !isAvailable(interfaceEndpointConn.AWSConnectionStatus) {
 		allAvailable = false
 	}
 

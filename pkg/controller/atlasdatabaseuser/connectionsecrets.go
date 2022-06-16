@@ -107,6 +107,7 @@ func createOrUpdateConnectionSecretsFromClusterSecrets(ctx *workflow.Context, k8
 			Password:      password,
 		}
 		var secretName string
+		ctx.Log.Debugw("Check data in connection secret update function", "data", data)
 		if secretName, err = connectionsecret.Ensure(k8sClient, dbUser.Namespace, project.Spec.Name, project.ID(), cs.name, data); err != nil {
 			return workflow.Terminate(workflow.DatabaseUserConnectionSecretsNotCreated, err.Error())
 		}
