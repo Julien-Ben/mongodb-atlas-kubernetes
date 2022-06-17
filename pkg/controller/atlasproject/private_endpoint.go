@@ -206,9 +206,9 @@ func createPeInterfaceInAtlas(client mongodbatlas.Client, projectID string, endp
 			if gcpEndpoints, err := specPeService.Endpoints.ConvertToAtlas(); err == nil {
 				interfaceConn.Endpoints = gcpEndpoints
 			}
-			interfaceConn, _, err := client.PrivateEndpoints.AddOnePrivateEndpoint(context.Background(), projectID, string(specPeService.Provider), statusPeService.ID, interfaceConn)
+			interfaceConn, response, err := client.PrivateEndpoints.AddOnePrivateEndpoint(context.Background(), projectID, string(specPeService.Provider), statusPeService.ID, interfaceConn)
 			log.Debugw("AddOnePrivateEndpoint Reply", "interfaceConn", interfaceConn, "err", err)
-			if err != nil {
+			if err != nil && response.StatusCode != 409 {
 				return err
 			}
 		}
@@ -218,9 +218,9 @@ func createPeInterfaceInAtlas(client mongodbatlas.Client, projectID string, endp
 }
 
 func endpointsAreNotFullyConfigured(specPeService mdbv1.PrivateEndpoint, statusPeService status.ProjectPrivateEndpoint) bool {
-	awsOrAzureCondition := specPeService.ID != "" && statusPeService.InterfaceEndpointID == ""
-	gcpCondition := specPeService.GCPProjectID != "" && specPeService.EndpointGroupName != "" && len(specPeService.Endpoints) != 0 && len(statusPeService.Endpoints) != len(specPeService.Endpoints)
-	return awsOrAzureCondition || gcpCondition
+	awsOrAzureNotReady := specPeService.ID != "" && statusPeService.InterfaceEndpointID == ""
+	gcpNotReady := specPeService.GCPProjectID != "" && specPeService.EndpointGroupName != "" && len(specPeService.Endpoints) != 0 && len(statusPeService.Endpoints) != len(specPeService.Endpoints)
+	return awsOrAzureNotReady || gcpNotReady
 }
 
 func DeleteAllPrivateEndpoints(ctx *workflow.Context, client mongodbatlas.Client, projectID string, statusPE []status.ProjectPrivateEndpoint, log *zap.SugaredLogger) workflow.Result {
